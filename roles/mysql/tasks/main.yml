@@ -1,0 +1,11 @@
+---
+
+#include the yaml file that we created in the ec2_instances role
+- name: include endpoint
+  include_vars:
+    file: /home/endpoint.yml
+
+#Create a mysql database in the rds instance. Supplying the username, host, password, and login port
+- name: Create mysql database
+  mysql_db: name={{ db_name }} state=present login_user={{ db_user }} login_password={{ db_pw }} login_host={{ endpoint }} login_port=3306 connect_timeout=360
+  

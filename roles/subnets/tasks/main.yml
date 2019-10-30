@@ -1,0 +1,127 @@
+#CREATE SUBNETS
+ - name: create public subnet and associate to vpc
+   ec2_vpc_subnet:
+    state: present
+    vpc_id: "{{ vpc.vpc.id }}"
+    region: "{{ region }}"
+    aws_access_key: "{{ aws_access_key }}"
+    aws_secret_key: "{{ aws_secret_key }}"
+    az: "{{ az_1 }}"
+    cidr: "{{ subnet_ip_jumphost }}"
+    map_public: yes
+    resource_tags:
+      Name: "{{ subnet_name_public }}"
+   register: publicsubnet
+
+ - name: create variable for public subnet cidr_block
+   set_fact:
+     public_subnet_cidr_block: "{{ publicsubnet.subnet.cidr_block }}"
+
+
+ - name: create public subnet for lb and associate to vpc
+   ec2_vpc_subnet:
+    state: present
+    vpc_id: "{{ vpc.vpc.id }}"
+    region: "{{ region }}"
+    aws_access_key: "{{ aws_access_key }}"
+    aws_secret_key: "{{ aws_secret_key }}"
+    az: "{{ az_2 }}"
+    cidr: "{{ subnet_ip_jumphost_lb }}"
+    map_public: yes
+    resource_tags:
+      Name: "{{ subnet_name_public_lb }}"
+   register: publicsubnetforlb
+
+ - name: create variable for public subnet cidr_block
+   set_fact:
+     public_subnet_cidr_block: "{{ publicsubnet.subnet.cidr_block }}"
+
+ - name: create private subnet and associate to vpc
+   ec2_vpc_subnet:
+      state: present
+      vpc_id: "{{ vpc.vpc.id }}"
+      region: "{{ region }}"
+      az: "{{ az_1 }}"
+      cidr: "{{ subnet_ip_private }}"
+      map_public: yes
+      resource_tags:
+        Name: "{{ subnet_name_private }}"
+      aws_access_key: "{{ aws_access_key }}"
+      aws_secret_key: "{{ aws_secret_key }}"
+   register: privatesubnet
+
+ - name: create variable for private subnet cidr_block
+   set_fact:
+     private_subnet_cidr_block: "{{ privatesubnet.subnet.cidr_block }}"
+
+ - name: create private subnet for lb and associate to vpc
+   ec2_vpc_subnet:
+      state: present
+      vpc_id: "{{ vpc.vpc.id }}"
+      region: "{{ region }}"
+      az: "{{ az_2 }}"
+      cidr: "{{ subnet_ip_private_lb }}"
+      map_public: yes
+      resource_tags:
+        Name: "{{ subnet_name_private_lb }}"
+      aws_access_key: "{{ aws_access_key }}"
+      aws_secret_key: "{{ aws_secret_key }}"
+   register: privatesubnetlb
+
+ - name: create variable for private subnet cidr_block
+   set_fact:
+     private_subnet_cidr_block_lb: "{{ privatesubnetlb.subnet.cidr_block }}"
+
+ - name: create web subnet and associate to vpc
+   ec2_vpc_subnet:
+       state: present
+       vpc_id: "{{ vpc.vpc.id }}"
+       region: "{{ region }}"
+       az: "{{ az_1 }}"
+       cidr: "{{ subnet_ip_web }}"
+       map_public: yes
+       resource_tags:
+         Name: "{{ subnet_name_web }}"
+       aws_access_key: "{{ aws_access_key }}"
+       aws_secret_key: "{{ aws_secret_key }}"
+   register: websubnet
+
+ - name: create variable for private subnet cidr_block
+   set_fact:
+       web_subnet_cidr_block: "{{ websubnet.subnet.cidr_block }}"
+
+ - name: create web subnet for lb and associate to vpc
+   ec2_vpc_subnet:
+       state: present
+       vpc_id: "{{ vpc.vpc.id }}"
+       region: "{{ region }}"
+       az: "{{ az_2 }}"
+       cidr: "{{ subnet_ip_web_lb }}"
+       map_public: yes
+       resource_tags:
+         Name: "{{ subnet_name_web_lb }}"
+       aws_access_key: "{{ aws_access_key }}"
+       aws_secret_key: "{{ aws_secret_key }}"
+   register: websubnetforlb
+
+ - name: create variable for private subnet for lb cidr_block
+   set_fact:
+       web_subnet_cidr_block: "{{ websubnetforlb.subnet.cidr_block }}"
+
+ - name: create rds subnet and associate to vpc
+   ec2_vpc_subnet:
+        state: present
+        vpc_id: "{{ vpc.vpc.id }}"
+        region: "{{ region }}"
+        az: "{{ az_3 }}"
+        cidr: "{{ subnet_ip_rds }}"
+        map_public: yes
+        resource_tags:
+          Name: "{{ subnet_name_rds }}"
+        aws_access_key: "{{ aws_access_key }}"
+        aws_secret_key: "{{ aws_secret_key }}"
+   register: rdssubnet
+
+ - name: create variable for private subnet cidr_block
+   set_fact:
+       rds_subnet_cidr_block: "{{ rdssubnet.subnet.cidr_block }}"

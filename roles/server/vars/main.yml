@@ -1,0 +1,9 @@
+
+---
+ aws_access_key: AKIAUDQZRK5SF24VSTSD
+ aws_secret_key: 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
+
+# DATABASE
+ db_user: admin
+ db_pw: admin123
+ db_name: wordpress

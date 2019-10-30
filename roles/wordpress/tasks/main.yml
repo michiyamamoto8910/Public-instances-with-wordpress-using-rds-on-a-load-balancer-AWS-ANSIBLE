@@ -1,0 +1,38 @@
+---
+- name: Download WordPress
+  get_url: 
+    url=https://wordpress.org/latest.tar.gz 
+    dest=/tmp/wordpress.tar.gz
+    validate_certs=no
+
+- name: Extract WordPress
+  unarchive: src=/tmp/wordpress.tar.gz dest=/var/www/ copy=no
+  sudo: yes
+
+- name: Update default Apache site
+  sudo: yes
+  lineinfile: 
+    dest=/etc/apache2/sites-enabled/000-default.conf 
+    regexp="(.)+DocumentRoot /var/www/html"
+    line="DocumentRoot /var/www/wordpress"
+
+- name: restart apache
+  raw: sudo service apache2 restart
+
+- name: Copy sample config file
+  command: mv /var/www/wordpress/wp-config-sample.php /var/www/wordpress/wp-config.php creates=/var/www/wordpress/wp-config.php
+  sudo: yes
+
+#Modify configuration of wordpress by storing your credentials(Database name, Database user, Database password, and the endpoint of the rds instance as host).
+- name: Update WordPress config file
+  lineinfile:
+    dest=/var/www/wordpress/wp-config.php
+    regexp="{{ item.regexp }}"
+    line="{{ item.line }}"
+  with_items:
+    - {'regexp': "DB_NAME", 'line': "define('DB_NAME', '{{db_name}}');"}        
+    - {'regexp': "DB_USER", 'line': "define('DB_USER', '{{db_user}}');"}        
+    - {'regexp': "DB_PASSWORD", 'line': "define('DB_PASSWORD', '{{db_pw}}');"}
+    - {'regexp': "DB_HOST", 'line': "define('DB_HOST', '{{endpoint}}');"}
+  sudo: yes
+

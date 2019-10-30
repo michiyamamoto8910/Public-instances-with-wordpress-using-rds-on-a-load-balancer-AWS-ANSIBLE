@@ -1,0 +1,111 @@
+#EC2 INSTANCE
+ - name: launching public ec2
+   ec2:
+     instance_type: "{{ instance_type }}"
+     image: "{{ image }}"
+     region: "{{ region }}"
+     aws_access_key: "{{ aws_access_key }}"
+     aws_secret_key: "{{aws_secret_key }}"
+     key_name: ansible-key
+     count: 1
+     group: "{{ instance_name_public }}"
+     vpc_subnet_id: "{{ publicsubnet.subnet.id }}"
+     wait: yes
+     assign_public_ip: yes
+     instance_tags:
+       Name: "{{ ec2_instance_public_name }}"
+   register: public_ec2
+
+ - name: Create variable for public ec2 id
+   set_fact:
+        public_ec2_id: "{{ public_ec2.instance_ids }}"   
+
+ - name: launching second public ec2
+   ec2:
+     instance_type: "{{ instance_type }}"
+     image: "{{ image }}"
+     region: "{{ region }}"
+     aws_access_key: "{{ aws_access_key }}"
+     aws_secret_key: "{{aws_secret_key }}"
+     key_name: ansible-key
+     count: 1
+     group: "{{ instance_name_public }}"
+     vpc_subnet_id: "{{ publicsubnetforlb.subnet.id }}"
+     wait: yes
+     assign_public_ip: yes
+     instance_tags:
+       Name: Public for LB
+   register: second_public_ec2
+
+ - name: Create variable for second public ec22 id
+   set_fact:
+        second_public_ec2_id: "{{ second_public_ec2.instance_ids }}"  
+
+# Wait for ssh to be up to be able to connect properly to the instances
+ - name: Wait for SSH to come up
+   wait_for:
+    host: "{{ item.public_ip }}"
+    port: 22 
+    state: started 
+   with_items: 
+        - "{{ public_ec2.instances }}"
+        - "{{ second_public_ec2.instances }}"
+
+#Add the newly created instances to hosts, and use them later
+ - name: Make ec2 the servers
+   add_host:
+        hostname: "{{item.public_ip}}"
+        groupname: wpservers
+        host_key_checking: = False
+   with_items: 
+        - "{{ public_ec2.instances }}"
+        - "{{ second_public_ec2.instances }}"
+
+
+#CREATE RDS SUBNET GROUPS
+ - name: create rds subnet group
+   rds_subnet_group:
+    state: present
+    name: "{{ vpc_name }}"
+    aws_access_key: "{{ aws_access_key }}"
+    aws_secret_key: "{{aws_secret_key }}"
+    region: "{{ region }}"
+    description: Subnet group for Michi RDS
+    subnets:
+      - "{{ privatesubnet.subnet.id }}"
+      - "{{ publicsubnet.subnet.id }}"
+      - "{{ websubnet.subnet.id }}"
+      - "{{ rdssubnet.subnet.id }}"
+   register: subnet_group
+
+
+  #CREATE DATABASE
+ - name: Create an RDS MySQL DATABASE
+   rds:
+    command: create
+    wait: yes
+    wait_timeout: 1500
+    aws_access_key: "{{ aws_access_key }}"
+    aws_secret_key: "{{aws_secret_key }}"
+    region: "{{ region }}"
+    instance_name: "{{ db_name }}"
+    db_engine: MySQL
+    size: 5
+    publicly_accessible: yes
+    instance_type: db.t2.micro
+    username: "{{ db_user }}"
+    password: "{{ db_pw }}"
+    vpc_security_groups: "{{ sg_of_rds.group_id }}"
+    subnet: "{{ vpc_name }}"
+   register: rds
+
+   
+#Make a file that registers a the information of the endpoint to a variable-- to be used later in connecting to the rds instancesdfs
+ - copy:
+       content: |
+          endpoint: "{{ rds.instance.endpoint }}"
+       dest: "/home/endpoint.yml"
+   become_method: sudo
+   become: yes
+   
+

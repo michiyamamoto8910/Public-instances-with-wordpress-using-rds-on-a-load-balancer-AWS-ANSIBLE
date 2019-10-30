@@ -1,0 +1,27 @@
+---
+- hosts: localhost
+  connection: local
+  gather_facts: yes
+  roles:
+    - VPC
+    - subnets
+    - IGW
+    # - NAT
+    - route_tables
+    - security_groups
+    - ec2_instances
+    - load_balancer
+
+
+
+- hosts: wpservers
+  remote_user: ubuntu
+  become: yes
+  roles:
+    - server
+    - mysql
+    - php
+    - wordpress
+
+    
+    

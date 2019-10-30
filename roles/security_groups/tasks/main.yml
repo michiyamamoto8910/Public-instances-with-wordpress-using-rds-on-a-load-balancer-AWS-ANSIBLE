@@ -1,0 +1,97 @@
+#CREATE SECURITY GROUPS
+#  - command: curl --silent --fail http://checkip.amazonaws.com/
+#    register: external_ip
+#  - set_fact:
+#       routable_ip: "{{external_ip.stdout}}{{ route_prefix }}"
+#  - name: Security group for public instance
+#    ec2_group:
+#     name: "{{ instance_name_public }}"
+#     description: sg for public
+#     vpc_id: "{{ vpc.vpc.id }}"
+#     region: "{{ region }}"
+#     aws_access_key: "{{ aws_access_key }}"
+#     aws_secret_key: "{{ aws_secret_key }}"
+#     rules:
+#       - proto: tcp
+#         ports:
+#         - 22
+#         cidr_ip: "{{ routable_ip }}"
+#         rule_desc: allow only your ip
+
+ - name: Security group for public instance
+   ec2_group:
+    name: "{{ instance_name_public }}"
+    description: sg for public
+    vpc_id: "{{ vpc.vpc.id }}"
+    region: "{{ region }}"
+    aws_access_key: "{{ aws_access_key }}"
+    aws_secret_key: "{{ aws_secret_key }}"
+    rules:
+      - proto: tcp
+        ports:
+        - 22
+        - 80
+        cidr_ip: "0.0.0.0/0"
+        rule_desc: allow only your ip
+
+ -
+   ec2_group:
+      aws_access_key: "{{ aws_access_key }}"
+      aws_secret_key: "{{ aws_secret_key }}"
+      description: "sg for lb"
+      name: "{{ instance_name_lb }}"
+      region: "{{ region }}"
+      rules:
+        -
+          cidr_ip: 0.0.0.0/0
+          ports:
+            - 80
+          proto: tcp
+          rule_desc: "allow all"
+      vpc_id: "{{ vpc.vpc.id }}"
+   name: "Security group for Load balancer instance"
+   register: sg_of_lb
+
+
+ - name: create variable for sg of load balance
+   set_fact:
+     group_id_of_sg_lb: "{{ sg_of_lb.group_id }}"
+
+ - name: Security group for RDS
+   ec2_group:
+     name: "{{ instance_name_rds }}"
+     description: sg for rds
+     vpc_id: "{{ vpc.vpc.id }}"
+     region: "{{ region }}"
+     aws_access_key: "{{ aws_access_key }}"
+     aws_secret_key: "{{ aws_secret_key }}"
+     rules:
+       - proto: tcp
+         ports:
+         - 3306
+         #cidr_ip: "{{ private_subnet_cidr_block }}"
+         cidr_ip: 0.0.0.0/0
+   register: sg_of_rds
+
+ - name: create variable for sg of load balance
+   set_fact:
+      group_id_of_rds_lb: "{{ sg_of_rds.group_id }}"
+
+ - name: Security group for private
+   ec2_group:
+     name: "{{ instance_name_private }}"
+     description: sg for rds
+     vpc_id: "{{ vpc.vpc.id }}"
+     region: "{{ region }}"
+     aws_access_key: "{{ aws_access_key }}"
+     aws_secret_key: "{{ aws_secret_key }}"
+     rules:
+       - proto: tcp
+         ports:
+         - 80
+         group_id: "{{ group_id_of_sg_lb }}"
+       - proto: tcp
+         ports:
+         - 22
+         cidr_ip:
+           - "{{ public_subnet_cidr_block }}"

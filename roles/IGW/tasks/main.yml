@@ -1,0 +1,11 @@
+#CREATE IGW
+ - name: create IGW
+   ec2_vpc_igw:
+     vpc_id: "{{ vpc.vpc.id }}"
+     region: "{{ region }}"
+     aws_access_key: "{{ aws_access_key }}"
+     aws_secret_key: "{{ aws_secret_key }}"
+     state: "present"
+     tags:
+       Name: "{{ igw_name }}"
+   register: igw

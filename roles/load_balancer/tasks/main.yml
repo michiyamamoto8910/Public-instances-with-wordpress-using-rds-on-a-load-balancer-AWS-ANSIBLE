@@ -1,0 +1,28 @@
+#CREATE LOAD BALANCER
+ - name: create load balancer
+   ec2_elb_lb:
+    name: "load-balancer"
+    instance_ids: "{{ item }}"
+    aws_access_key: "{{ aws_access_key }}"
+    aws_secret_key: "{{aws_secret_key }}"
+    region: "{{ region }}"
+    security_group_names: "{{ instance_name_lb }}"
+    state: present
+    health_check:
+        ping_protocol: tcp # options are http, https, ssl, tcp
+        ping_port: 80
+        response_timeout: 5
+        interval: 30 # seconds
+        unhealthy_threshold: 2
+        healthy_threshold: 2
+    subnets:
+      - "{{ publicsubnet.subnet.id }}"
+      - "{{ publicsubnetforlb.subnet.id }}"
+    purge_subnets: true
+    listeners:
+      - protocol: http
+        load_balancer_port: 80
+        instance_port: 80
+   with_items:
+        -  "{{ second_public_ec2_id }}"
+        -  "{{ public_ec2_id }}"

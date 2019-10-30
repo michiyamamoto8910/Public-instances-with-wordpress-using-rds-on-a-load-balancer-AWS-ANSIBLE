@@ -1,0 +1,36 @@
+#CREATE ROUTE TABLE
+ - name: Set up public subnet route table
+   ec2_vpc_route_table:
+      vpc_id: "{{ vpc.vpc.id }}"
+      region: "{{ region }}"
+      tags:
+        Name: Public
+      subnets:
+        - "{{ publicsubnet.subnet.id }}"
+        - "{{ publicsubnetforlb.subnet.id }}"
+        - "{{ websubnet.subnet.id }}"
+        - "{{ websubnetforlb.subnet.id }}"
+      routes:
+        - dest: 0.0.0.0/0
+          gateway_id: "{{ igw.gateway_id }}"
+      aws_access_key: "{{ aws_access_key }}"
+      aws_secret_key: "{{ aws_secret_key }}"
+   register: public_route_table
+
+
+#  - name: Set up private subnet route table
+#    ec2_vpc_route_table:
+#        vpc_id: "{{ vpc.vpc.id }}"
+#        region: "{{ region }}"
+#        tags:
+#          Name: Private
+#        subnets:
+#          - "{{ privatesubnet.subnet.id }}"
+#          - "{{ privatesubnetlb.subnet.id }}"
+#          - "{{ rdssubnet.subnet.id }}"
+#        routes:
+#          - dest: 0.0.0.0/0
+#            gateway_id: "{{ nat_gateway_id }}"
+#        aws_access_key: "{{ aws_access_key }}"
+#        aws_secret_key: "{{ aws_secret_key }}"
+#    register: private_route_table
