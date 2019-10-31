@@ -1,7 +1,7 @@
 
 ---
- aws_access_key: AKIAUDQZRK5SF24VSTSD
- aws_secret_key: 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
+ aws_access_key: 
+ aws_secret_key: 
 
  #ip_default: "192.168"
  instance_type: t2.micro
